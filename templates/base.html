@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriDetect – Premium AI Agritech Dashboard{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_modern.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="futuristic-body">
+    <div class="background-layers" aria-hidden="true"></div>
+    <div class="background-grid" aria-hidden="true"></div>
+    <div class="particle-overlay" aria-hidden="true"></div>
+    <div id="alertContainer" class="alert-container"></div>
+
+    <nav class="navbar navbar-expand-lg futuristic-nav py-3">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <span class="brand-icon"><i class="fas fa-seedling"></i></span>
+                <div>
+                    <div class="brand-title">AgriDetect</div>
+                    <div class="brand-subtitle">Premium Agritech Platform</div>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    {% if current_user %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/upload"><i class="fas fa-cloud-upload-alt"></i> Predict</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/advisor"><i class="fas fa-robot"></i> AI Advisor</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end futuristic-dropdown" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                                <li><a class="dropdown-item" href="/history">History</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/register"><i class="fas fa-user-plus"></i> Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="futuristic-footer py-5">
+        <div class="container">
+            <div class="footer-topline"></div>
+            <div class="row gy-4 align-items-start">
+                <div class="col-lg-4">
+                    <div class="footer-brand-block">
+                        <div class="brand-icon footer-brand-icon"><i class="fas fa-seedling"></i></div>
+                        <div>
+                            <h5 class="mb-1">AgriDetect</h5>
+                            <p class="mb-0">Premium crop diagnostics and AI-powered advisory for modern farms.</p>
+                        </div>
+                    </div>
+                    <div class="footer-socials mt-4">
+                        <a href="#" class="footer-social-link" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                        <a href="#" class="footer-social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="footer-social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <h5>Quick Nav</h5>
+                    <ul class="footer-links list-unstyled footer-nav-list">
+                        <li><a href="/dashboard">Dashboard</a></li>
+                        <li><a href="/upload">Predict</a></li>
+                        <li><a href="/history">History</a></li>
+                        <li><a href="/advisor">AI Advisor</a></li>
+                    </ul>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <h5>Platform</h5>
+                    <ul class="footer-links list-unstyled footer-nav-list">
+                        <li><a href="/profile">Profile</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/register">Create Account</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h5>Contact</h5>
+                    <p class="mb-2"><i class="fas fa-envelope me-2"></i> support@agridetect.ai</p>
+                    <p class="mb-0"><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 mt-3">
+                <small>&copy; 2026 AgriDetect. All rights reserved.</small>
+                <small class="footer-meta">AI farming dashboard built for production workflows.</small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main_modern.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

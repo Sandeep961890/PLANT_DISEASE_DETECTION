@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Home - AgriDetect{% endblock %}
+
+{% block content %}
+<section class="hero-section py-5">
+    <div class="container">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-6">
+                <div class="hero-panel">
+                    <p class="section-title mb-3">FUTURISTIC FARMING CONTROL PANEL</p>
+                    <h1 class="hero-title mb-4">AI-Powered Crop Disease Detection</h1>
+                    <p class="hero-copy mb-4">Turn every leaf image into a smart diagnosis with neon-glow analytics, intelligent recommendations, and complete prediction history—all from an advanced AI farming dashboard.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% if current_user %}
+                            <a href="/upload" class="btn btn-glow btn-lg">Start Scanning</a>
+                            <a href="/dashboard" class="btn btn-outline-primary btn-lg">Go to Dashboard</a>
+                        {% else %}
+                            <a href="/register" class="btn btn-glow btn-lg">Join Now</a>
+                            <a href="/login" class="btn btn-outline-primary btn-lg">Sign In</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stat-panel">
+                                <div class="stat-label">Predictions</div>
+                                <div class="stat-value">50K+</div>
+                                <div class="stat-note">Fast AI disease scans</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-panel">
+                                <div class="stat-label">Accuracy</div>
+                                <div class="stat-value">98%</div>
+                                <div class="stat-note">Research-backed models</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-panel">
+                                <div class="stat-label">Crops Covered</div>
+                                <div class="stat-value">3</div>
+                                <div class="stat-note">Banana, Corn, Sugarcane</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-panel">
+                                <div class="stat-label">AI Advisor</div>
+                                <div class="stat-value">24/7</div>
+                                <div class="stat-note">Smart farming guidance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card p-4 mt-4">
+                    <h3 class="section-title mb-3">Smart Farming Highlights</h3>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-3"><i class="fas fa-check-circle text-cyan me-2"></i>Instant leaf disease detection</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-cyan me-2"></i>Adaptive AI recommendations</li>
+                        <li><i class="fas fa-check-circle text-cyan me-2"></i>Secure user dashboard and history logs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container py-5">
+    <div class="section-title-wrapper">
+        <div>
+            <p class="section-label text-muted mb-2">Why AgriDetect</p>
+            <h2 class="section-title mb-1">Next-Gen Crop Intelligence</h2>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5>Neon Analytics</h5>
+                <p class="text-muted">Track crop health through glowing AI visualizations and real-time prediction insights.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5>AI Diagnostics</h5>
+                <p class="text-muted">Identify disease patterns with deep learning and make smarter treatment decisions faster.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5>Field Recommendations</h5>
+                <p class="text-muted">Receive fertilizer guidance, severity alerts, and recovery plans for healthier yields.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container py-5">
+    <div class="section-title-wrapper">
+        <div>
+            <p class="section-label text-muted mb-2">Supported Crops</p>
+            <h2 class="section-title mb-1">Crops Monitored by Our AI</h2>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5>Banana</h5>
+                <p class="text-muted">Cordana, Pestalotiopsis, Sigatoka and healthy leaf detection.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5>Corn</h5>
+                <p class="text-muted">Blight, Common Rust, Gray Leaf Spot and healthy crop analysis.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5>Sugarcane</h5>
+                <p class="text-muted">Red Rot, Rust, Yellow, Mosaic, Bacterial Blights and healthy conditions.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}AI Advisor - AgriDetect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white p-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-robot"></i> AI Agricultural Advisor
+                    </h3>
+                </div>
+                <div class="card-body p-5">
+                    <p class="lead mb-4">
+                        Get expert agricultural advice powered by AI. Ask questions about crop diseases, treatment options, and prevention strategies.
+                    </p>
+
+                    <div class="mb-4 card border-0 shadow-sm p-4 bg-light">
+                        <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+                            <div class="flex-grow-1">
+                                <h5 class="mb-2"><i class="fas fa-microphone"></i> Voice Query</h5>
+                                <p class="mb-2 text-muted">Use your microphone to ask the AI advisor a question, then review the response below.</p>
+                                <div id="voiceStatus" class="small text-muted">Microphone ready.</div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-lg" id="voiceToggleBtn">
+                                <i class="fas fa-microphone"></i> Start Voice Input
+                            </button>
+                        </div>
+                        <div class="input-group mt-4">
+                            <span class="input-group-text"><i class="fas fa-comments"></i></span>
+                            <input type="text" id="voiceTranscript" class="form-control" placeholder="Live transcript will appear here..." readonly>
+                        </div>
+                        <div class="form-text mt-2">The transcript will populate your question field automatically.</div>
+                    </div>
+
+                    <!-- Advisor Form -->
+                    <form id="advisorForm">
+                        <div class="mb-4">
+                            <label for="advisorCrop" class="form-label fw-bold">Select Crop</label>
+                            <select class="form-select form-select-lg" id="advisorCrop" required>
+                                <option value="">-- Choose a crop --</option>
+                                {% for crop in crops %}
+                                    <option value="{{ crop }}">{{ crop.capitalize() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="advisorDisease" class="form-label fw-bold">Disease or Issue</label>
+                            <input type="text" class="form-control form-control-lg" id="advisorDisease" 
+                                   placeholder="e.g., Leaf spots, wilting, yellowing" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="advisorQuestion" class="form-label fw-bold">Your Question</label>
+                            <textarea class="form-control" id="advisorQuestion" rows="5" 
+                                      placeholder="Ask specific questions about treatment, prevention, or management..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="askBtn">
+                            <i class="fas fa-send"></i> Ask Advisor
+                        </button>
+                    </form>
+
+                    <!-- Loading Indicator -->
+                    <div id="advisorLoading" style="display: none;" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>AI Advisor is analyzing your question...</p>
+                    </div>
+
+                    <!-- Alert Container -->
+                    <div id="advisorAlertContainer" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Common Questions -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-question-circle"></i> Common Questions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <button type="button" class="list-group-item list-group-item-action text-start common-question" 
+                                data-crop="banana" data-disease="Sigatoka">
+                            <small>What are the best treatments for Sigatoka on Banana?</small>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action text-start common-question"
+                                data-crop="corn" data-disease="Blight">
+                            <small>How to prevent Corn Blight in my fields?</small>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action text-start common-question"
+                                data-crop="sugarcane" data-disease="RedRot">
+                            <small>What's the management plan for Sugarcane Red Rot?</small>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action text-start common-question"
+                                data-crop="banana" data-disease="Pestalotiopsis">
+                            <small>Early symptoms of Pestalotiopsis disease?</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-headset"></i> Voice Query History</h5>
+                </div>
+                <div class="card-body">
+                    <div id="voiceHistoryList" class="list-group list-group-flush">
+                        <div class="text-muted small">Loading recent voice interactions...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> AI Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i> Be specific about your crop and symptoms
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i> Include your location and climate info
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i> Ask about prevention and treatment
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i> Get recommendations for fertilizers
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i> Ask about recovery timeline
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Section -->
+    <div id="responseSection" style="display: none;" class="mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-success text-white p-4">
+                        <h4 class="mb-0">
+                            <i class="fas fa-lightbulb"></i> Advisor Recommendations
+                        </h4>
+                    </div>
+                    <div class="card-body p-5">
+                        <div id="adviceOutput" class="advice-output mb-4"></div>
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            <button type="button" class="btn btn-outline-secondary" id="listenAnswerBtn">
+                                <i class="fas fa-volume-up"></i> Listen
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="copyAnswerBtn">
+                                <i class="fas fa-copy"></i> Copy Answer
+                            </button>
+                        </div>
+                        <div class="mt-4 pt-4 border-top">
+                            <button type="button" class="btn btn-outline-primary" id="resetAdvisorBtn">
+                                <i class="fas fa-redo"></i> Ask Another Question
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set common question handlers
+document.querySelectorAll('.common-question').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const crop = this.dataset.crop;
+        const disease = this.dataset.disease;
+
+        document.getElementById('advisorCrop').value = crop;
+        document.getElementById('advisorDisease').value = disease;
+        document.getElementById('advisorQuestion').focus();
+    });
+});
+
+const supportSpeechRecognition = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isRecording = false;
+const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+const voiceStatus = document.getElementById('voiceStatus');
+const voiceTranscript = document.getElementById('voiceTranscript');
+const advisorForm = document.getElementById('advisorForm');
+const advisorLoading = document.getElementById('advisorLoading');
+const advisorAlertContainer = document.getElementById('advisorAlertContainer');
+const responseSection = document.getElementById('responseSection');
+const adviceOutput = document.getElementById('adviceOutput');
+const listenAnswerBtn = document.getElementById('listenAnswerBtn');
+const copyAnswerBtn = document.getElementById('copyAnswerBtn');
+const resetAdvisorBtn = document.getElementById('resetAdvisorBtn');
+const voiceHistoryList = document.getElementById('voiceHistoryList');
+
+function updateVoiceStatus(message, statusClass = 'muted') {
+    if (!voiceStatus) return;
+    voiceStatus.textContent = message;
+    voiceStatus.className = `small text-${statusClass}`;
+}
+
+function buildAnswerHtml(answer) {
+    if (!answer) {
+        return '<p class="text-muted">No answer returned from the assistant.</p>';
+    }
+    return answer
+        .split(/\n{2,}/)
+        .map(section => `<p>${escapeHtml(section).replace(/\n/g, '<br>')}</p>`)
+        .join('');
+}
+
+function speakText(text) {
+    if (!text || !window.speechSynthesis) {
+        updateVoiceStatus('Text-to-speech is unavailable in this browser.', 'danger');
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+}
+
+function showVoiceHistory(queries) {
+    if (!voiceHistoryList) return;
+    voiceHistoryList.innerHTML = '';
+
+    if (!queries || !queries.length) {
+        voiceHistoryList.innerHTML = '<div class="text-muted small">No voice queries yet. Start by asking the AI advisor a question.</div>';
+        return;
+    }
+
+    queries.forEach(query => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'list-group-item list-group-item-action';
+        button.innerHTML = `
+            <div class="fw-semibold">${escapeHtml(query.question)}</div>
+            <small class="text-muted">${escapeHtml(query.created_at)}</small>
+        `;
+
+        button.addEventListener('click', () => {
+            document.getElementById('advisorCrop').value = query.crop;
+            document.getElementById('advisorDisease').value = query.disease;
+            document.getElementById('advisorQuestion').value = query.question;
+            voiceTranscript.value = query.transcript || query.question;
+            displayVoiceResponse(query.answer || '');
+        });
+
+        voiceHistoryList.appendChild(button);
+    });
+}
+
+async function loadVoiceHistory() {
+    if (!voiceHistoryList) return;
+    try {
+        const response = await fetch('/api/voice-history');
+        const data = await response.json();
+        if (data.success) {
+            showVoiceHistory(data.queries);
+        } else {
+            voiceHistoryList.innerHTML = `<div class="text-danger small">${escapeHtml(data.error || 'Failed to load voice history.')}</div>`;
+        }
+    } catch (error) {
+        voiceHistoryList.innerHTML = '<div class="text-danger small">Unable to load voice history.</div>';
+        console.error(error);
+    }
+}
+
+function displayVoiceResponse(answer) {
+    if (!responseSection || !adviceOutput) return;
+    adviceOutput.innerHTML = buildAnswerHtml(answer);
+    responseSection.style.display = 'block';
+}
+
+function resetAdvisorForm() {
+    advisorForm.reset();
+    voiceTranscript.value = '';
+    responseSection.style.display = 'none';
+    advisorForm.style.display = 'block';
+    advisorAlertContainer.innerHTML = '';
+    updateVoiceStatus('Microphone ready.', 'muted');
+}
+
+function initializeSpeechRecognition() {
+    if (!supportSpeechRecognition) {
+        updateVoiceStatus('Speech recognition is not supported by this browser.', 'danger');
+        voiceToggleBtn.disabled = true;
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+        isRecording = true;
+        voiceToggleBtn.innerHTML = '<i class="fas fa-stop-circle"></i> Stop Voice Input';
+        updateVoiceStatus('Listening now... speak clearly.', 'success');
+    };
+
+    recognition.onerror = event => {
+        console.error('Speech recognition error', event);
+        updateVoiceStatus('Voice input failed. Try again.', 'danger');
+        isRecording = false;
+        voiceToggleBtn.innerHTML = '<i class="fas fa-microphone"></i> Start Voice Input';
+    };
+
+    recognition.onresult = event => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        voiceTranscript.value = transcript;
+        document.getElementById('advisorQuestion').value = transcript;
+        updateVoiceStatus('Transcript captured. Review and submit your question.', 'success');
+    };
+
+    recognition.onend = () => {
+        if (isRecording) {
+            isRecording = false;
+            voiceToggleBtn.innerHTML = '<i class="fas fa-microphone"></i> Start Voice Input';
+            updateVoiceStatus('Voice input ended. You can submit your question.', 'muted');
+        }
+    };
+}
+
+function toggleVoiceInput() {
+    if (!supportSpeechRecognition) {
+        return;
+    }
+
+    if (!recognition) {
+        initializeSpeechRecognition();
+    }
+
+    if (isRecording) {
+        recognition.stop();
+        return;
+    }
+
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Unable to start voice recognition:', error);
+        updateVoiceStatus('Unable to start voice recognition.', 'danger');
+    }
+}
+
+voiceToggleBtn?.addEventListener('click', toggleVoiceInput);
+
+advisorForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const crop = document.getElementById('advisorCrop').value;
+    const disease = document.getElementById('advisorDisease').value;
+    const question = document.getElementById('advisorQuestion').value;
+    const transcript = voiceTranscript.value;
+
+    if (!crop || !disease || !question) {
+        advisorAlertContainer.innerHTML = '<div class="alert alert-warning">Please fill in all fields</div>';
+        return;
+    }
+
+    advisorForm.style.display = 'none';
+    advisorLoading.style.display = 'block';
+    advisorAlertContainer.innerHTML = '';
+
+    try {
+        const response = await fetch('/api/voice-query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                crop,
+                disease,
+                question,
+                transcript
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            advisorAlertContainer.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.error || 'Unable to fetch advisor response')}</div>`;
+            advisorForm.style.display = 'block';
+            return;
+        }
+
+        displayVoiceResponse(data.answer);
+        loadVoiceHistory();
+        if (window.speechSynthesis) {
+            speakText(data.answer);
+        }
+    } catch (error) {
+        console.error(error);
+        advisorAlertContainer.innerHTML = '<div class="alert alert-danger">Failed to get advisor response. Please try again.</div>';
+        advisorForm.style.display = 'block';
+    } finally {
+        advisorLoading.style.display = 'none';
+    }
+});
+
+listenAnswerBtn?.addEventListener('click', () => {
+    const text = adviceOutput.textContent || '';
+    speakText(text);
+});
+
+copyAnswerBtn?.addEventListener('click', async () => {
+    const text = adviceOutput.textContent || '';
+    if (!text) {
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(text);
+        updateVoiceStatus('Answer copied to clipboard.', 'success');
+    } catch (error) {
+        console.error('Copy failed', error);
+        updateVoiceStatus('Unable to copy answer.', 'danger');
+    }
+});
+
+resetAdvisorBtn?.addEventListener('click', () => {
+    resetAdvisorForm();
+});
+
+if (!supportSpeechRecognition) {
+    updateVoiceStatus('Speech recognition is not supported by this browser.', 'danger');
+}
+
+loadVoiceHistory();
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+# Python caches and bytecode
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.*/venv/
+.venv/
+.*/.venv/
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Datasets and generated training artifacts
+dataset/
+**/dataset/
+datasets/
+**/datasets/
+outputs/
+**/outputs/
+instance/
+**/instance/
+uploads/
+**/uploads/
+*.h5
+*.pt
+*.pth
+*.pkl
+
+# Build outputs
+build/
+dist/
+
+# OS and log files
+.DS_Store
+*.log

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Predict Disease - AgriDetect{% endblock %}
+
+{% block content %}
+<section class="hero-section py-5">
+    <div class="container">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-7">
+                <div class="hero-panel">
+                    <p class="section-label mb-3">Agritech Scan</p>
+                    <h1 class="hero-title mb-3">Upload your crop image for instant AI diagnosis.</h1>
+                    <p class="hero-copy">Use the premium scan interface to capture leaf health, receive confidence scores, and get practical treatment guidance from the AI engine.</p>
+                </div>
+            </div>
+            <div class="col-lg-5 text-lg-end">
+                <a href="/dashboard" class="btn btn-outline-primary btn-lg">View Dashboard</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="glass-card p-4">
+                <div class="section-title-wrapper mb-4">
+                    <div>
+                        <p class="section-label text-muted mb-2">Smart Upload</p>
+                        <h3 class="section-title mb-0">AI Scan Zone</h3>
+                    </div>
+                </div>
+                <form id="predictionForm" class="row g-4" novalidate>
+                    <div class="col-12">
+                        <label class="form-label" for="crop">Select Crop</label>
+                        <select class="form-select" id="crop" required>
+                            <option value="">-- Choose a crop --</option>
+                            <option value="banana">Banana</option>
+                            <option value="corn">Corn</option>
+                            <option value="sugarcane">Sugarcane</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div>
+                                <p class="mb-1"><strong>Drag & drop your leaf image</strong></p>
+                                <p class="text-muted">or click to browse supported formats</p>
+                            </div>
+                            <small class="text-muted">JPG, PNG, GIF, BMP — Max 50MB</small>
+                            <input type="file" class="d-none" id="imageUpload" accept="image/*,.jpg,.jpeg,.png,.gif,.bmp" capture="environment">
+                        </div>
+                    </div>
+                    <div class="col-12 d-none" id="previewContainer">
+                        <div class="preview-card p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted">Image Preview</span>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="changeImageBtn">Change Image</button>
+                            </div>
+                            <img id="previewImage" src="" alt="Preview" class="img-fluid rounded" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="includeAdvice" checked>
+                            <label class="form-check-label text-muted" for="includeAdvice">Include AI recommendation insights</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-glow btn-lg w-100">Analyze Image</button>
+                    </div>
+                </form>
+                <div id="loadingContainer" class="text-center d-none mt-4">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <p class="mt-3 text-muted">AI scanning leaf data...</p>
+                </div>
+            </div>
+            <div id="resultsSection" class="glass-card p-4 mt-4 d-none"></div>
+        </div>
+        <div class="col-xl-5">
+            <div class="glass-card p-4">
+                <h4 class="section-title mb-3">Capture Best Photos</h4>
+                <ul class="text-muted">
+                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Use good lighting and clear focus.</li>
+                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Frame the leaf close enough to reveal symptoms.</li>
+                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Avoid shadows and reflections.</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Use a dark, uniform background for best results.</li>
+                </ul>
+            </div>
+            <div class="glass-card p-4">
+                <h4 class="section-title mb-3">How it works</h4>
+                <div class="text-muted">
+                    <p><strong>1.</strong> Select your crop and upload a leaf image.</p>
+                    <p><strong>2.</strong> The AI model analyzes disease patterns.</p>
+                    <p><strong>3.</strong> Receive confidence metrics and treatment advice.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - AgriDetect{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                <div>
+                    <h2 class="section-title mb-2">Prediction History</h2>
+                    <p class="text-muted mb-0">Review your crop scans, fertilizer advice, and AI insights in one premium console.</p>
+                </div>
+                <a href="/upload" class="btn btn-glow">Analyze New Leaf</a>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label text-muted">Search</label>
+                    <input type="text" class="form-control neon-input" id="searchInput" placeholder="Search by disease, crop or date...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted">Crop</label>
+                    <select class="form-select neon-input" id="cropFilter">
+                        <option value="">All Crops</option>
+                        <option value="banana">Banana</option>
+                        <option value="corn">Corn</option>
+                        <option value="sugarcane">Sugarcane</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted">Sort By</label>
+                    <select class="form-select neon-input" id="sortBy">
+                        <option value="recent">Most Recent</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="confidence">Highest Confidence</option>
+                        <option value="disease">Disease Name</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 mb-4">
+            <div class="table-responsive neon-table">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Crop</th>
+                            <th>Disease</th>
+                            <th>Confidence</th>
+                            <th>Fertilizer</th>
+                            <th>AI Advice</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictionsBody">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <div class="spinner-border text-cyan" role="status"></div>
+                                <div class="mt-3">Loading predictions...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="text-muted" id="tableSummary">0 of 0 records displayed</div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0" id="paginationContainer"></ul>
+            </nav>
+        </div>
+    </div>
+</section>
+
+<!-- Prediction Detail Modal -->
+<div class="modal fade" id="predictionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glow-card neon-card">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Prediction Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="predictionModalBody"></div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-glow" id="historyDownloadReportBtn">
+                    <i class="fas fa-download"></i> Download Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentHistoryPredictionId = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadHistoryTable();
+    
+    // Setup filters
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('cropFilter').addEventListener('change', filterTable);
+    document.getElementById('sortBy').addEventListener('change', sortTable);
+
+    document.getElementById('historyDownloadReportBtn').addEventListener('click', function () {
+        downloadPredictionReport();
+    });
+});
+
+async function loadHistoryTable() {
+    try {
+        const response = await fetch('/api/history?limit=100');
+        const data = await response.json();
+        const predictions = data.predictions || [];
+        
+        const tbody = document.getElementById('predictionsBody');
+        
+        if (predictions.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No predictions found.</p>
+                        <a href="/upload" class="btn btn-sm btn-success">Make your first prediction</a>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = predictions.map(pred => `
+            <tr data-disease="${pred.disease}" data-crop="${pred.crop}">
+                <td><small>${new Date(pred.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}</small></td>
+                <td>
+                    <span class="badge bg-info">${pred.crop.charAt(0).toUpperCase() + pred.crop.slice(1)}</span>
+                </td>
+                <td>${pred.disease}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: ${parseFloat(pred.confidence) * 100}%">
+                            </div>
+                        </div>
+                        <small>${pred.confidence_percent}</small>
+                    </div>
+                </td>
+                <td>
+                    ${pred.fertilizer_recommendation ? `
+                        <div class="small text-muted recommendation-snippet" style="max-width: 220px;">
+                            ${escapeHtml(pred.fertilizer_recommendation.replace(/\n/g, ' ').slice(0, 110))}${pred.fertilizer_recommendation.length > 110 ? '...' : ''}
+                        </div>
+                    ` : '-'}
+                </td>
+                <td>
+                    ${pred.ai_advice ? `
+                        <div class="small text-muted recommendation-snippet" style="max-width: 260px;">
+                            ${escapeHtml(pred.ai_advice.replace(/\n/g, ' ').slice(0, 140))}${pred.ai_advice.length > 140 ? '...' : ''}
+                        </div>
+                    ` : '-'}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewPredictionDetail(${pred.id})">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button class="btn btn-sm btn-success ms-2" onclick="downloadPredictionReport(${pred.id})">
+                        <i class="fas fa-file-download"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading history:', error);
+        const tbody = document.getElementById('predictionsBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-danger py-4">
+                    Failed to load predictions. Please try again later.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+async function viewPredictionDetail(predictionId) {
+    try {
+        currentHistoryPredictionId = predictionId;
+        const response = await fetch(`/api/prediction/${predictionId}`);
+        const data = await response.json();
+        const pred = data.prediction || data;
+
+        if (!pred) {
+            alert('Prediction details are unavailable.');
+            return;
+        }
+        
+        const modalBody = document.getElementById('predictionModalBody');
+        const confidencePercent = parseFloat(pred.confidence) * 100;
+        
+        let allProbs = '';
+        if (pred.all_probabilities) {
+            Object.entries(pred.all_probabilities).forEach(([disease, prob]) => {
+                const probPercent = parseFloat(prob) * 100;
+                allProbs += `
+                    <div class="probability-item">
+                        <div class="probability-label">${disease}</div>
+                        <div class="probability-bar-container">
+                            <div class="probability-bar" style="width: ${probPercent}%">
+                                ${probPercent > 5 ? probPercent.toFixed(1) + '%' : ''}
+                            </div>
+                        </div>
+                        <div class="probability-percent">${probPercent.toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+        }
+        
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <img src="${pred.image_path}" class="img-fluid rounded shadow" alt="Analyzed Image">
+                </div>
+                <div class="col-md-6">
+                    <h5>Disease Information</h5>
+                    <hr>
+                    <p><strong>Crop:</strong> ${pred.crop.charAt(0).toUpperCase() + pred.crop.slice(1)}</p>
+                    <p><strong>Disease:</strong> ${pred.disease}</p>
+                    <p><strong>Confidence:</strong> ${pred.confidence_percent}</p>
+                    <p><strong>Severity:</strong> <span class="severity-badge ${typeof severityBadgeClass === 'function' ? severityBadgeClass(pred.severity || (typeof severityFromConfidence === 'function' ? severityFromConfidence(pred.confidence) : 'low')) : 'severity-low'}">${typeof severityBadgeLabel === 'function' ? severityBadgeLabel(pred.severity || (typeof severityFromConfidence === 'function' ? severityFromConfidence(pred.confidence) : 'low')) : 'Low Severity'}</span></p>
+                    <p><strong>Date:</strong> ${new Date(pred.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}</p>
+                    
+                    <h6 class="mt-3 mb-2">Disease Probabilities</h6>
+                    <div class="probability-list mb-3">
+                        ${allProbs}
+                    </div>
+
+                    ${typeof buildAgriculturalRecommendationSections === 'function' ? buildAgriculturalRecommendationSections(pred) : ''}
+                    
+                    ${pred.ai_advice ? `
+                        <hr>
+                        <h5>AI Advice</h5>
+                        <div class="border rounded p-3 bg-light" style="max-height:300px;overflow-y:auto;font-size:0.9rem;">
+                            ${escapeHtml(pred.ai_advice).replace(/\n/g, '<br>')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('predictionModal'));
+        modal.show();
+    } catch (error) {
+        alert('Failed to load prediction details');
+    }
+}
+
+function downloadPredictionReport(predictionId = currentHistoryPredictionId) {
+    if (!predictionId) {
+        alert('Select a prediction first');
+        return;
+    }
+
+    window.location.href = `/download-report/${predictionId}`;
+}
+
+function filterTable() {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const cropFilter = document.getElementById('cropFilter').value.toLowerCase();
+    
+    document.querySelectorAll('#predictionsBody tr').forEach(row => {
+        const disease = row.getAttribute('data-disease').toLowerCase();
+        const crop = row.getAttribute('data-crop').toLowerCase();
+        
+        const matchesSearch = disease.includes(searchInput);
+        const matchesCrop = cropFilter === '' || crop === cropFilter;
+        
+        row.style.display = matchesSearch && matchesCrop ? '' : 'none';
+    });
+}
+
+function sortTable() {
+    const sortBy = document.getElementById('sortBy').value;
+    const tbody = document.getElementById('predictionsBody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => row.style.display !== 'none');
+
+    const parseDateCell = (text) => {
+        const date = new Date(text);
+        return isNaN(date.getTime()) ? 0 : date.getTime();
+    };
+
+    rows.sort((a, b) => {
+        if (sortBy === 'recent' || sortBy === 'oldest') {
+            const aDate = parseDateCell(a.cells[0].textContent);
+            const bDate = parseDateCell(b.cells[0].textContent);
+            return sortBy === 'recent' ? bDate - aDate : aDate - bDate;
+        }
+
+        if (sortBy === 'confidence') {
+            const aValue = parseFloat(a.cells[3].textContent) || 0;
+            const bValue = parseFloat(b.cells[3].textContent) || 0;
+            return bValue - aValue;
+        }
+
+        if (sortBy === 'disease') {
+            return a.cells[2].textContent.localeCompare(b.cells[2].textContent);
+        }
+
+        return 0;
+    });
+
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+{% endblock %}

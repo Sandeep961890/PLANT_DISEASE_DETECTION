@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Register - AgriDetect{% endblock %}
+
+{% block content %}
+<section class="hero-section py-5">
+    <div class="container">
+        <div class="glass-card p-5 mx-auto" style="max-width: 640px;">
+            <div class="text-center mb-4">
+                <div class="brand-icon mb-3"><i class="fas fa-user-plus"></i></div>
+                <h1 class="hero-title mb-2">Join AgriDetect</h1>
+                <p class="hero-copy text-muted">Create your account to unlock AI-supported crop disease diagnosis and advisory tools.</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control form-control-lg" id="username" name="username" placeholder="Choose a username" required minlength="3">
+                        <small class="text-muted">At least 3 characters</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control form-control-lg" id="password" name="password" placeholder="Create a strong password" required minlength="6">
+                        <small class="text-muted">At least 6 characters</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control form-control-lg" id="confirmPassword" name="confirm_password" placeholder="Confirm your password" required minlength="6">
+                    </div>
+                </div>
+
+                <div class="form-check form-switch text-muted mt-4">
+                    <input type="checkbox" class="form-check-input" id="agree" name="agree" required>
+                    <label class="form-check-label" for="agree">I agree to the <a href="#" class="text-cyan">terms and conditions</a></label>
+                </div>
+
+                <button type="submit" class="btn btn-glow btn-lg w-100 mt-4">
+                    <i class="fas fa-user-check me-2"></i> Create Account
+                </button>
+            </form>
+
+            <div class="text-center mt-4 text-muted">
+                <p class="mb-2">Already have an account? <a href="/login" class="text-cyan">Sign in here</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+
+    if (password.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                email,
+                password,
+                confirm_password: confirmPassword
+            })
+        });
+
+        if (response.status === 201 || response.ok) {
+            showToast('Registration successful! Redirecting...', 'success', 1500);
+            setTimeout(() => window.location.href = '/dashboard', 1500);
+        } else {
+            const data = await response.json();
+            showToast(data.error || 'Registration failed', 'error');
+        }
+    } catch (error) {
+        showToast('Registration error: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+});
+</script>
+{% endblock %}

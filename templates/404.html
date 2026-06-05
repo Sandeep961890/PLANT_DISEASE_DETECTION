@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+
+{% block content %}
+<section class="hero-section py-5">
+    <div class="container">
+        <div class="glass-card p-5 text-center mx-auto" style="max-width: 640px;">
+            <h1 class="display-1 fw-bold text-cyan">404</h1>
+            <h2 class="section-title mb-3">Page Not Found</h2>
+            <p class="text-muted mb-4">The resource you are looking for can't be found. Explore the dashboard or submit a new prediction.</p>
+            <a href="/" class="btn btn-glow btn-lg">
+                <i class="fas fa-home me-2"></i> Return Home
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
