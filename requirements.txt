@@ -17,8 +17,7 @@ requests>=2.31.0
 reportlab>=4.0.0
 ultralytics>=8.0.0
 
-# Database
-sqlite3-python>=1.0.0
+
 
 # Additional
 python-dotenv>=1.0.0
