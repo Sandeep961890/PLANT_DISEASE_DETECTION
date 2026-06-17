@@ -1,40 +1,55 @@
+# =========================
 # Python caches and bytecode
+# =========================
 __pycache__/
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
+# =========================
 # Virtual environments
+# =========================
 venv/
-.*/venv/
 .venv/
-.*/.venv/
+env/
+ENV/
 
+# =========================
 # Node dependencies
+# =========================
 node_modules/
 **/node_modules/
 
-# Datasets and generated training artifacts
-dataset/
-**/dataset/
-datasets/
-**/datasets/
-outputs/
-**/outputs/
-instance/
-**/instance/
-uploads/
-**/uploads/
+# =========================
+# Datasets (IGNORE ONLY IF LARGE - optional)
+# =========================
+# dataset/
+# datasets/
+# outputs/
+# instance/
+# uploads/
+
+# ⚠️ IMPORTANT:
+# Uncomment above ONLY if you DON'T want to push dataset
+# Right now we keep dataset allowed
+
+# =========================
+# Model files (optional ignore)
+# =========================
 *.h5
 *.pt
 *.pth
 *.pkl
 
+# =========================
 # Build outputs
+# =========================
 build/
 dist/
 
-# OS and log files
+# =========================
+# OS and logs
+# =========================
 .DS_Store
 *.log
