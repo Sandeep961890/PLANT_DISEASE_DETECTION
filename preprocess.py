@@ -1,64 +1,90 @@
 import os
 import cv2
 import numpy as np
-from typing import Tuple, Optional, Generator
+
+from typing import (
+    Tuple,
+    Optional,
+    Generator
+)
 
 
-def read_image_safe(path: str) -> Optional[np.ndarray]:
+# =========================================================
+# SAFE IMAGE READER
+# =========================================================
+
+def read_image_safe(
+    path: str
+) -> Optional[np.ndarray]:
+
     """
     Safely read image from disk.
-
-    Supports:
-    - Unicode file paths
-    - Corrupted image handling
-    - Windows-compatible loading
+    Supports unicode paths and
+    corrupted image handling.
     """
 
     try:
 
         img = cv2.imdecode(
-            np.fromfile(path, dtype=np.uint8),
+            np.fromfile(
+                path,
+                dtype=np.uint8
+            ),
             cv2.IMREAD_COLOR
         )
 
         if img is None:
-            print(f"[WARNING] Unable to read image: {path}")
+
+            print(
+                f"[WARNING] Unable to read image:\n{path}"
+            )
+
             return None
 
         return img
 
     except Exception as e:
 
-        print(f"[ERROR] Failed reading image: {path}")
+        print(
+            f"[ERROR] Failed reading image:\n{path}"
+        )
+
         print(e)
 
         return None
 
 
-def clahe_enhance(img: np.ndarray) -> np.ndarray:
+# =========================================================
+# CLAHE ENHANCEMENT
+# =========================================================
+
+def clahe_enhance(
+    img: np.ndarray
+) -> np.ndarray:
+
     """
-    Apply CLAHE enhancement to improve
-    leaf texture and disease visibility.
+    Apply CLAHE enhancement
+    to improve disease visibility.
     """
 
-    # Convert BGR to LAB color space
-    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    lab = cv2.cvtColor(
+        img,
+        cv2.COLOR_BGR2LAB
+    )
 
-    # Split channels
     l, a, b = cv2.split(lab)
 
-    # CLAHE on Lightness channel
     clahe = cv2.createCLAHE(
         clipLimit=3.0,
         tileGridSize=(8, 8)
     )
 
-    cl = clahe.apply(l)
+    l_clahe = clahe.apply(l)
 
-    # Merge channels
-    merged = cv2.merge((cl, a, b))
+    merged = cv2.merge(
+        (l_clahe, a, b)
+    )
 
-    # Convert back to BGR
     enhanced = cv2.cvtColor(
         merged,
         cv2.COLOR_LAB2BGR
@@ -67,23 +93,19 @@ def clahe_enhance(img: np.ndarray) -> np.ndarray:
     return enhanced
 
 
+# =========================================================
+# IMAGE PREPROCESSING
+# =========================================================
+
 def preprocess_image(
     path: str,
     size: Tuple[int, int] = (224, 224)
 ) -> Optional[np.ndarray]:
+
     """
     Complete preprocessing pipeline.
-
-    Steps:
-    1. Safe image loading
-    2. Noise reduction
-    3. CLAHE enhancement
-    4. RGB conversion
-    5. Resize
-    6. Normalization
     """
 
-    # Read image safely
     img = read_image_safe(path)
 
     if img is None:
@@ -92,98 +114,190 @@ def preprocess_image(
     try:
 
         # Noise reduction
-        img = cv2.GaussianBlur(img, (3, 3), 0)
+        img = cv2.GaussianBlur(
+            img,
+            (3, 3),
+            0
+        )
 
         # CLAHE enhancement
         img = clahe_enhance(img)
 
-        # Convert BGR → RGB
+        # BGR -> RGB
         img = cv2.cvtColor(
             img,
             cv2.COLOR_BGR2RGB
         )
 
-        # Resize image
+        # Resize
         img = cv2.resize(
             img,
             size,
             interpolation=cv2.INTER_AREA
         )
 
-        # Normalize pixels
-        img = img.astype(np.float32) / 255.0
+        # Normalize
+        img = img.astype(
+            np.float32
+        ) / 255.0
 
         return img
 
     except Exception as e:
 
-        print(f"[ERROR] Failed preprocessing image: {path}")
+        print(
+            f"[ERROR] Failed preprocessing:\n{path}"
+        )
+
         print(e)
 
         return None
 
 
+# =========================================================
+# DATASET LOADER
+# =========================================================
+
 def load_dataset_paths(
     root_dir: str
 ) -> Generator[Tuple[str, str], None, None]:
-    """
-    Load dataset image paths and labels.
 
-    Expected Structure:
-    dataset/
+    """
+    Universal Dataset Loader
+
+    Supports structures like:
+
+    dataset/banana/
+        BananaLSD/
+            AugmentedSet/
+                healthy/
+                cordana/
+                pestalotiopsis/
+                sigatoka/
+
+    dataset/corn/
+        data/
+            Healthy/
+            Blight/
+            Common_Rust/
+            Gray_Leaf_Spot/
+
+    dataset/sugarcane/
+        BacterialBlights/
         healthy/
-        diseased/
+        Mosaic/
+        red_rot/
+        rust/
+        Yellow/
 
     Returns:
-    --------
-    Generator:
-        (image_path, class_label)
+        image_path, class_label
     """
 
     if not os.path.exists(root_dir):
 
         raise FileNotFoundError(
-            f"Dataset directory not found: {root_dir}"
+            f"Dataset not found: {root_dir}"
         )
 
-    # Get class folders
-    classes = []
-
-    for entry in sorted(os.listdir(root_dir)):
-
-        class_path = os.path.join(root_dir, entry)
-
-        if os.path.isdir(class_path):
-            classes.append(entry)
-
-    print(f"\nFound Classes: {classes}\n")
-
-    # Supported image formats
     valid_extensions = (
-        '.jpg',
-        '.jpeg',
-        '.png',
-        '.bmp',
-        '.tif',
-        '.tiff',
-        '.webp'
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".bmp",
+        ".tif",
+        ".tiff",
+        ".webp"
     )
 
-    # Traverse class folders
-    for cls in classes:
+    class_counts = {}
 
-        cls_dir = os.path.join(root_dir, cls)
+    total_images = 0
+
+    # ============================================
+    # Walk entire dataset tree
+    # ============================================
+
+    for current_root, dirs, files in os.walk(root_dir):
+
+        image_files = [
+            f for f in files
+            if f.lower().endswith(valid_extensions)
+        ]
+
+        # Skip folders without images
+        if len(image_files) == 0:
+            continue
+
+        # Use current folder name as label
+        class_name = os.path.basename(
+            current_root
+        ).lower()
 
         image_count = 0
 
-        for fname in os.listdir(cls_dir):
+        for fname in image_files:
 
-            if fname.lower().endswith(valid_extensions):
+            image_path = os.path.join(
+                current_root,
+                fname
+            )
 
-                image_path = os.path.join(cls_dir, fname)
+            image_count += 1
+            total_images += 1
 
-                image_count += 1
+            yield image_path, class_name
 
-                yield image_path, cls
+        class_counts[class_name] = (
+            class_counts.get(
+                class_name,
+                0
+            )
+            + image_count
+        )
 
-        print(f"[INFO] Loaded {image_count} images from class: {cls}")
+    # ============================================
+    # Dataset Summary
+    # ============================================
+
+    print("\n===================================")
+    print(" DATASET SUMMARY ")
+    print("===================================\n")
+
+    print(
+        f"Classes Found: "
+        f"{sorted(class_counts.keys())}\n"
+    )
+
+    for cls in sorted(
+        class_counts.keys()
+    ):
+
+        print(
+            f"[INFO] Loaded "
+            f"{class_counts[cls]} "
+            f"images from class: {cls}"
+        )
+
+    print(
+        f"\nTotal Images Loaded: "
+        f"{total_images}"
+    )
+
+    print("\n===================================\n")
+
+    # ============================================
+    # Safety Check
+    # ============================================
+
+    if len(class_counts) < 2:
+
+        print(
+            "\n[WARNING] Dataset contains "
+            "fewer than 2 classes."
+        )
+
+        print(
+            "SVM classification requires "
+            "at least 2 classes.\n"
+        )

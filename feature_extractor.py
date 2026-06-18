@@ -314,3 +314,15 @@ class FeatureExtractor:
         print("\n===================================\n")
 
         return final_features, valid_labels
+    # =========================================================
+# TEST
+# =========================================================
+
+if __name__ == "__main__":
+
+    print("\nDEVICE INFO:")
+    print(get_device_info())
+
+    extractor = FeatureExtractor()
+
+    print("\nFeatureExtractor initialized successfully!")
